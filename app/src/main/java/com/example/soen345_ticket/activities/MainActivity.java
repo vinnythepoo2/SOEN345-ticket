@@ -1,10 +1,10 @@
 package com.example.soen345_ticket.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // We'll handle the buttons manually now instead of the overflow menu
         setSupportActionBar(binding.toolbar);
 
         eventRepository = new EventRepository();
@@ -51,6 +52,17 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 updateRecyclerView(eventRepository.getEventsQuery());
             }
+        });
+
+        // Manual button listeners for the custom toolbar
+        binding.btnMyReservations.setOnClickListener(v -> {
+            startActivity(new Intent(this, MyReservationsActivity.class));
+        });
+
+        binding.btnLogout.setOnClickListener(v -> {
+            userRepository.logout();
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
         });
     }
 
@@ -83,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        binding.rvEvents.setLayoutManager(new LinearLayoutManager(this));
+        binding.rvEvents.setLayoutManager(new WrappedLinearLayoutManager(this));
         binding.rvEvents.setAdapter(adapter);
     }
 
@@ -106,26 +118,6 @@ public class MainActivity extends AppCompatActivity {
         if (adapter != null) adapter.stopListening();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_my_reservations) {
-            startActivity(new Intent(this, MyReservationsActivity.class));
-            return true;
-        } else if (item.getItemId() == R.id.action_logout) {
-            userRepository.logout();
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
     public static class EventViewHolder extends RecyclerView.ViewHolder {
         TextView tvTitle, tvDate, tvLocation, tvPrice, tvSeats;
 
@@ -136,6 +128,21 @@ public class MainActivity extends AppCompatActivity {
             tvLocation = itemView.findViewById(R.id.tvEventLocation);
             tvPrice = itemView.findViewById(R.id.tvEventPrice);
             tvSeats = itemView.findViewById(R.id.tvAvailableSeats);
+        }
+    }
+
+    private static class WrappedLinearLayoutManager extends LinearLayoutManager {
+        public WrappedLinearLayoutManager(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
+            try {
+                super.onLayoutChildren(recycler, state);
+            } catch (IndexOutOfBoundsException e) {
+                Log.e("RecyclerView", "IndexOutOfBoundsException caught in onLayoutChildren");
+            }
         }
     }
 }

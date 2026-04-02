@@ -27,6 +27,13 @@ public class ReservationActivity extends AppCompatActivity {
         binding = ActivityReservationBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Set the toolbar but disable the back arrow (Home button)
+        setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            getSupportActionBar().setTitle("Confirm Reservation");
+        }
+
         event = (Event) getIntent().getSerializableExtra("event");
         reservationRepository = new ReservationRepository();
         userRepository = new UserRepository();
@@ -65,6 +72,11 @@ public class ReservationActivity extends AppCompatActivity {
 
                 confirmBooking(quantity);
             });
+            
+            // Explicit Back button listener
+            binding.btnBack.setOnClickListener(v -> {
+                onBackPressed();
+            });
         }
     }
 
@@ -101,7 +113,7 @@ public class ReservationActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             } else {
-                Toast.makeText(this, "Failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Failed: " + (task.getException() != null ? task.getException().getMessage() : "Unknown error"), Toast.LENGTH_SHORT).show();
             }
         });
     }
