@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "104829150627",
+    "project_id": "soen345-eaa21",
+    "storage_bucket": "soen345-eaa21.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:104829150627:android:68cc0684b2527e983be616",
+        "android_client_info": {
+          "package_name": "com.example.soen345_ticket"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCU3LOC55h3e-beGr4Gx1YiHXX3HsATQyQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
