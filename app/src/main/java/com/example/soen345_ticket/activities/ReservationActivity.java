@@ -1,0 +1,108 @@
+package com.example.soen345_ticket.activities;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import com.example.soen345_ticket.databinding.ActivityReservationBinding;
+import com.example.soen345_ticket.models.Event;
+import com.example.soen345_ticket.models.Reservation;
+import com.example.soen345_ticket.repositories.ReservationRepository;
+import com.example.soen345_ticket.repositories.UserRepository;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+public class ReservationActivity extends AppCompatActivity {
+    private ActivityReservationBinding binding;
+    private Event event;
+    private ReservationRepository reservationRepository;
+    private UserRepository userRepository;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        binding = ActivityReservationBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        event = (Event) getIntent().getSerializableExtra("event");
+        reservationRepository = new ReservationRepository();
+        userRepository = new UserRepository();
+
+        if (event != null) {
+            binding.tvEventTitle.setText(event.getTitle());
+            binding.tvEventPrice.setText("Price per ticket: $" + event.getPrice());
+            updateTotal();
+
+            binding.etQuantity.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                @Override
+                public void afterTextChanged(Editable s) {
+                    updateTotal();
+                }
+            });
+
+            binding.btnConfirm.setOnClickListener(v -> {
+                String qtyStr = binding.etQuantity.getText().toString();
+                if (qtyStr.isEmpty()) {
+                    Toast.makeText(this, "Enter quantity", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                int quantity = Integer.parseInt(qtyStr);
+                if (quantity <= 0) {
+                    Toast.makeText(this, "Quantity must be at least 1", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (quantity > event.getAvailableSeats()) {
+                    Toast.makeText(this, "Not enough seats available", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                confirmBooking(quantity);
+            });
+        }
+    }
+
+    private void updateTotal() {
+        String qtyStr = binding.etQuantity.getText().toString();
+        if (!qtyStr.isEmpty()) {
+            int quantity = Integer.parseInt(qtyStr);
+            double total = quantity * event.getPrice();
+            binding.tvTotalPrice.setText(String.format(Locale.getDefault(), "Total: $%.2f", total));
+        } else {
+            binding.tvTotalPrice.setText("Total: $0.00");
+        }
+    }
+
+    private void confirmBooking(int quantity) {
+        String userId = userRepository.getCurrentUserId();
+        String date = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(new Date());
+
+        Reservation reservation = new Reservation(
+                null,
+                userId,
+                event.getEventId(),
+                event.getTitle(),
+                date,
+                quantity,
+                "active"
+        );
+
+        reservationRepository.createReservation(reservation, quantity).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Toast.makeText(this, "Reservation confirmed!", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+                finish();
+            } else {
+                Toast.makeText(this, "Failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+}
