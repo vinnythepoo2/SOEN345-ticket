@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">SOEN345-ticket</string>
+    <string name="app_name">SOEN345 Ticket</string>
+    <string name="action_logout">Logout</string>
+    <string name="action_my_reservations">My Reservations</string>
 </resources>
