@@ -34,13 +34,18 @@ public class MyReservationsActivity extends AppCompatActivity {
         setSupportActionBar(binding.toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("My Reservations");
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         }
 
         reservationRepository = new ReservationRepository();
         userRepository = new UserRepository();
 
         setupRecyclerView();
+        
+        // Manual back button listener
+        binding.btnBack.setOnClickListener(v -> {
+            onBackPressed();
+        });
     }
 
     private void setupRecyclerView() {

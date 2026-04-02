@@ -1,13 +1,14 @@
 package com.example.soen345_ticket.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -19,6 +20,7 @@ import com.example.soen345_ticket.repositories.EventRepository;
 import com.example.soen345_ticket.repositories.UserRepository;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.Query;
 
 public class AdminDashboardActivity extends AppCompatActivity {
@@ -33,7 +35,11 @@ public class AdminDashboardActivity extends AppCompatActivity {
         binding = ActivityAdminDashboardBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // We set the toolbar but won't use the overflow menu (triple dots) anymore
         setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Admin Dashboard");
+        }
 
         eventRepository = new EventRepository();
         userRepository = new UserRepository();
@@ -42,6 +48,13 @@ public class AdminDashboardActivity extends AppCompatActivity {
 
         binding.fabAddEvent.setOnClickListener(v -> {
             startActivity(new Intent(this, AddEditEventActivity.class));
+        });
+
+        // Manual Logout button on screen
+        binding.btnLogout.setOnClickListener(v -> {
+            userRepository.logout();
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
         });
     }
 
@@ -71,9 +84,16 @@ public class AdminDashboardActivity extends AppCompatActivity {
                 View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_admin_event, parent, false);
                 return new AdminEventViewHolder(view);
             }
+
+            @Override
+            public void onError(@NonNull DatabaseError error) {
+                super.onError(error);
+                Toast.makeText(AdminDashboardActivity.this, "Database Error: " + error.getMessage(), Toast.LENGTH_LONG).show();
+            }
         };
 
-        binding.rvEvents.setLayoutManager(new LinearLayoutManager(this));
+        // Use safe LayoutManager to prevent IndexOutOfBoundsException
+        binding.rvEvents.setLayoutManager(new WrappedLinearLayoutManager(this));
         binding.rvEvents.setAdapter(adapter);
     }
 
@@ -89,22 +109,7 @@ public class AdminDashboardActivity extends AppCompatActivity {
         if (adapter != null) adapter.stopListening();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.admin_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_logout) {
-            userRepository.logout();
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+    // Removed onCreateOptionsMenu and onOptionsItemSelected to get rid of the triple dots (overflow menu)
 
     public static class AdminEventViewHolder extends RecyclerView.ViewHolder {
         TextView tvTitle, tvDate, tvStatus, tvSeats;
@@ -115,6 +120,21 @@ public class AdminDashboardActivity extends AppCompatActivity {
             tvDate = itemView.findViewById(R.id.tvEventDate);
             tvStatus = itemView.findViewById(R.id.tvEventStatus);
             tvSeats = itemView.findViewById(R.id.tvEventSeats);
+        }
+    }
+
+    private static class WrappedLinearLayoutManager extends LinearLayoutManager {
+        public WrappedLinearLayoutManager(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
+            try {
+                super.onLayoutChildren(recycler, state);
+            } catch (IndexOutOfBoundsException e) {
+                Log.e("RecyclerView", "IndexOutOfBoundsException caught in onLayoutChildren");
+            }
         }
     }
 }

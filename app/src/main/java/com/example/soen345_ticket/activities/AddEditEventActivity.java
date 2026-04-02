@@ -1,8 +1,11 @@
 package com.example.soen345_ticket.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.soen345_ticket.databinding.ActivityAddEditEventBinding;
 import com.example.soen345_ticket.models.Event;
@@ -20,6 +23,13 @@ public class AddEditEventActivity extends AppCompatActivity {
         binding = ActivityAddEditEventBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Set the toolbar but disable the back arrow (Home button)
+        setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            getSupportActionBar().setTitle("Add/Edit Event");
+        }
+
         eventRepository = new EventRepository();
 
         event = (Event) getIntent().getSerializableExtra("event");
@@ -30,6 +40,21 @@ public class AddEditEventActivity extends AppCompatActivity {
 
         binding.btnSave.setOnClickListener(v -> saveEvent());
         binding.btnDelete.setOnClickListener(v -> deleteEvent());
+        
+        // Manual back button listener - explicitly goes to AdminDashboard
+        binding.btnBack.setOnClickListener(v -> goToDashboard());
+    }
+
+    private void goToDashboard() {
+        Intent intent = new Intent(this, AdminDashboardActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        goToDashboard();
     }
 
     private void setupEditMode() {
@@ -69,8 +94,6 @@ public class AddEditEventActivity extends AppCompatActivity {
             event.setCategory(category);
             event.setLocation(location);
             event.setDate(date);
-            // Updating total seats also updates available seats if simplified, but usually more logic needed.
-            // For MVP:
             int diff = totalSeats - event.getTotalSeats();
             event.setTotalSeats(totalSeats);
             event.setAvailableSeats(event.getAvailableSeats() + diff);
@@ -80,7 +103,7 @@ public class AddEditEventActivity extends AppCompatActivity {
             eventRepository.updateEvent(event).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     Toast.makeText(this, "Event updated", Toast.LENGTH_SHORT).show();
-                    finish();
+                    goToDashboard();
                 } else {
                     Toast.makeText(this, "Failed to update event", Toast.LENGTH_SHORT).show();
                 }
@@ -93,7 +116,7 @@ public class AddEditEventActivity extends AppCompatActivity {
             eventRepository.addEvent(newEvent).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     Toast.makeText(this, "Event added", Toast.LENGTH_SHORT).show();
-                    finish();
+                    goToDashboard();
                 } else {
                     Toast.makeText(this, "Failed to add event", Toast.LENGTH_SHORT).show();
                 }
@@ -106,7 +129,7 @@ public class AddEditEventActivity extends AppCompatActivity {
             eventRepository.deleteEvent(event.getEventId()).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     Toast.makeText(this, "Event deleted", Toast.LENGTH_SHORT).show();
-                    finish();
+                    goToDashboard();
                 } else {
                     Toast.makeText(this, "Failed to delete event", Toast.LENGTH_SHORT).show();
                 }

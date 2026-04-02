@@ -17,6 +17,13 @@ public class EventDetailActivity extends AppCompatActivity {
         binding = ActivityEventDetailBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Set the toolbar but disable the back arrow (Home button)
+        setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            getSupportActionBar().setTitle("Event Details");
+        }
+
         event = (Event) getIntent().getSerializableExtra("event");
 
         if (event != null) {
@@ -37,6 +44,14 @@ public class EventDetailActivity extends AppCompatActivity {
                 Intent intent = new Intent(this, ReservationActivity.class);
                 intent.putExtra("event", event);
                 startActivity(intent);
+            });
+            
+            // Fixed back button: explicitly return to MainActivity
+            binding.btnBack.setOnClickListener(v -> {
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
             });
         } else {
             Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
