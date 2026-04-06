@@ -44,9 +44,6 @@ sonar {
     properties {
         property("sonar.android.lint.report", "build/reports/lint-results-debug.xml")
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
-        property("sonar.sources", "src/main/java")
-        property("sonar.tests", "src/test/java")
-        property("sonar.java.binaries", "build/intermediates/javac/debug/classes")
     }
 }
 
