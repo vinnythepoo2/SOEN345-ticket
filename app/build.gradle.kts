@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services)
     id("jacoco")
-    alias(libs.plugins.sonarqube)
 }
 
 android {
@@ -43,15 +42,8 @@ android {
 
 sonar {
     properties {
-        property("sonar.projectName", "SOEN345-ticket")
-        property("sonar.projectKey", "vinnythepoo2_SOEN345-ticket")
-        property("sonar.host.url", "https://sonarcloud.io")
-        property("sonar.organization", "vinnythepoo2")
-        property("sonar.token", System.getenv("SONAR_TOKEN") ?: "")
         property("sonar.android.lint.report", "build/reports/lint-results-debug.xml")
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
-        
-        // Manual override for Android Gradle Plugin compatibility
         property("sonar.sources", "src/main/java")
         property("sonar.tests", "src/test/java")
         property("sonar.java.binaries", "build/intermediates/javac/debug/classes")
