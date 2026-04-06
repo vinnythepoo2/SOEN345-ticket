@@ -70,6 +70,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         "**/*Test*.*", "android/**/*.*"
     )
     
+    // Modern path for Java classes
     val debugTree = fileTree(layout.buildDirectory.dir("intermediates/javac/debug/classes")) {
         exclude(fileFilter)
     }
@@ -77,7 +78,12 @@ tasks.register<JacocoReport>("jacocoTestReport") {
 
     sourceDirectories.setFrom(files(mainSrc))
     classDirectories.setFrom(files(debugTree))
+    
+    // Modern paths for .exec and .ec files in AGP 8.x/9.x
     executionData.setFrom(fileTree(layout.buildDirectory) {
-        include("jacoco/testDebugUnitTest.exec", "outputs/code_coverage/debugAndroidTest/connected/*coverage.ec")
+        include(
+            "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+            "outputs/code_coverage/debugAndroidTest/connected/*coverage.ec"
+        )
     })
 }
