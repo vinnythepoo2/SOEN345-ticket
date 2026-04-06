@@ -10,6 +10,8 @@ constraintlayout = "2.2.1"
 googleGmsGoogleServices = "4.4.4"
 firebaseBom = "33.1.0"
 firebaseUi = "8.0.2"
+sonarqube = "7.2.3.7755"
+jacoco = "0.8.12"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -29,3 +31,4 @@ firebase-ui-database = { group = "com.firebaseui", name = "firebase-ui-database"
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
+sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }

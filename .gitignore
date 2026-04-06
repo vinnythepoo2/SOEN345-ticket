@@ -1,9 +1,12 @@
-*.iml
-.gradle
+# Project-specific
+.gradle/
+build/
 /local.properties
 /.idea/
 .DS_Store
-/build
+
+# Android-specific
+*.iml
 /captures
 .externalNativeBuild
 .cxx
@@ -12,10 +15,6 @@ local.properties
 # Android Studio
 *.hprof
 *.pyc
-
-# Gradle
-.gradle/
-build/
 
 # Signing files
 *.jks
@@ -36,3 +35,6 @@ google-services.json
 */build/reports/lint-results.xml
 */build/reports/lint-results-release.xml
 */build/reports/lint-results-debug.xml
+
+# Module-specific build directories
+app/build/
