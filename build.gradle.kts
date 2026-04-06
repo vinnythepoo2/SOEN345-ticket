@@ -14,3 +14,7 @@ sonar {
         property("sonar.token", System.getenv("SONAR_TOKEN") ?: "")
     }
 }
+
+subprojects {
+    apply(plugin = "org.sonarqube")
+}
