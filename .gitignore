@@ -1,15 +1,38 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/.idea/
 .DS_Store
 /build
 /captures
 .externalNativeBuild
 .cxx
 local.properties
+
+# Android Studio
+*.hprof
+*.pyc
+
+# Gradle
+.gradle/
+build/
+
+# Signing files
+*.jks
+*.keystore
+*.p12
+google-services.json
+
+# Built variants
+*.apk
+*.ap_
+*.aab
+
+# Unit test reports
+*/build/reports/tests/
+*/build/test-results/
+
+# Lint reports
+*/build/reports/lint-results.xml
+*/build/reports/lint-results-release.xml
+*/build/reports/lint-results-debug.xml
