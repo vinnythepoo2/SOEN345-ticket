@@ -29,8 +29,8 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    - name: Run Tests and Generate Coverage
-      run: ./gradlew testDebugUnitTest jacocoTestReport
+    - name: Build and Run Tests
+      run: ./gradlew assembleDebug testDebugUnitTest jacocoTestReport
 
     - name: Check Coverage Report Existence
       run: |
@@ -53,5 +53,4 @@ jobs:
     - name: SonarQube Analysis
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ./gradlew sonar
-
+      run: ./gradlew sonar --info --stacktrace
