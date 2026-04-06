@@ -12,7 +12,13 @@ sonar {
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.organization", "vinnythepoo2")
         property("sonar.token", System.getenv("SONAR_TOKEN") ?: "")
-        property("sonar.android.lint.report", "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml")
-        property("sonar.coverage.jacoco.xmlReportPaths", "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+        
+        // Root project should point to the sub-project's reports
+        property("sonar.sources", "app/src/main/java")
+        property("sonar.binaries", "app/build/intermediates/javac/debug/classes")
+        property("sonar.java.binaries", "app/build/intermediates/javac/debug/classes")
+        property("sonar.tests", "app/src/test/java")
+        property("sonar.android.lint.report", "app/build/reports/lint-results-debug.xml")
+        property("sonar.coverage.jacoco.xmlReportPaths", "app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
     }
 }
