@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services)
     id("jacoco")
-    alias(libs.plugins.sonarqube)
+    id("org.sonarqube") version "5.1.0.4882"
 }
 
 android {
@@ -50,6 +50,11 @@ sonar {
         property("sonar.token", System.getenv("SONAR_TOKEN") ?: "")
         property("sonar.android.lint.report", "build/reports/lint-results-debug.xml")
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+        
+        // Explicitly set paths to help the plugin in case auto-detection fails
+        property("sonar.sources", "src/main/java")
+        property("sonar.tests", "src/test/java")
+        property("sonar.java.binaries", "build/intermediates/javac/debug/classes")
     }
 }
 

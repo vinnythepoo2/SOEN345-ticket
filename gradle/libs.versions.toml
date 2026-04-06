@@ -10,7 +10,7 @@ constraintlayout = "2.2.1"
 googleGmsGoogleServices = "4.4.4"
 firebaseBom = "33.1.0"
 firebaseUi = "8.0.2"
-sonarqube = "7.2.3.7755"
+sonarqube = "5.1.0.4882"
 jacoco = "0.8.12"
 
 [libraries]
