@@ -53,5 +53,5 @@ jobs:
     - name: SonarQube Analysis
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ./gradlew sonar --info --stacktrace
+      run: ./gradlew sonar
 
