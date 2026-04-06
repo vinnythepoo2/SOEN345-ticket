@@ -13,13 +13,31 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvEventTitle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Event Title"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:id="@+id/tvEventTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Event Title"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvEventCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Category"
+                android:textSize="12sp"
+                android:background="@drawable/bg_category_tag"
+                android:textColor="@android:color/white" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvEventDate"
@@ -34,20 +52,27 @@
             android:layout_height="wrap_content"
             android:text="Location" />
 
-        <TextView
-            android:id="@+id/tvEventPrice"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Price"
-            android:textColor="@color/purple_700"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
 
-        <TextView
-            android:id="@+id/tvAvailableSeats"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Available Seats: 0"
-            android:gravity="end" />
+            <TextView
+                android:id="@+id/tvEventPrice"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Price"
+                android:textColor="@color/purple_700"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvAvailableSeats"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Available Seats: 0" />
+        </LinearLayout>
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

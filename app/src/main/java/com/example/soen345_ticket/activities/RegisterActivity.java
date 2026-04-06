@@ -8,8 +8,6 @@ import com.example.soen345_ticket.databinding.ActivityRegisterBinding;
 import com.example.soen345_ticket.models.User;
 import com.example.soen345_ticket.repositories.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 public class RegisterActivity extends AppCompatActivity {
     private ActivityRegisterBinding binding;
@@ -30,7 +28,7 @@ public class RegisterActivity extends AppCompatActivity {
             String email = binding.etEmail.getText().toString().trim();
             String phone = binding.etPhone.getText().toString().trim();
             String password = binding.etPassword.getText().toString().trim();
-            String role = binding.rbAdmin.isChecked() ? "admin" : "customer";
+            String role = "customer"; // Default role is customer
 
             if (fullName.isEmpty() || email.isEmpty() || phone.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
@@ -49,11 +47,7 @@ public class RegisterActivity extends AppCompatActivity {
                     userRepository.saveUser(user).addOnCompleteListener(saveTask -> {
                         if (saveTask.isSuccessful()) {
                             Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
-                            if ("admin".equals(role)) {
-                                startActivity(new Intent(this, AdminDashboardActivity.class));
-                            } else {
-                                startActivity(new Intent(this, MainActivity.class));
-                            }
+                            startActivity(new Intent(this, MainActivity.class));
                             finish();
                         } else {
                             Toast.makeText(this, "Failed to save user info: " + saveTask.getException().getMessage(), Toast.LENGTH_SHORT).show();

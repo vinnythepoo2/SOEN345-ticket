@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,7 +34,6 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // We'll handle the buttons manually now instead of the overflow menu
         setSupportActionBar(binding.toolbar);
 
         eventRepository = new EventRepository();
@@ -42,19 +42,22 @@ public class MainActivity extends AppCompatActivity {
         setupRecyclerView(eventRepository.getEventsQuery());
 
         binding.btnFilter.setOnClickListener(v -> {
-            String searchText = binding.etSearch.getText().toString().trim();
-            if (!searchText.isEmpty()) {
-                Query query = eventRepository.getAllEventsForAdminQuery()
-                        .orderByChild("title")
-                        .startAt(searchText)
-                        .endAt(searchText + "\uf8ff");
-                updateRecyclerView(query);
-            } else {
-                updateRecyclerView(eventRepository.getEventsQuery());
-            }
+            performSearch();
         });
 
-        // Manual button listeners for the custom toolbar
+        binding.spinnerFilterType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String searchText = binding.etSearch.getText().toString().trim();
+                if (!searchText.isEmpty()) {
+                    performSearch();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
         binding.btnMyReservations.setOnClickListener(v -> {
             startActivity(new Intent(this, MyReservationsActivity.class));
         });
@@ -64,6 +67,21 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
         });
+    }
+
+    private void performSearch() {
+        String searchText = binding.etSearch.getText().toString().trim();
+        String filterType = binding.spinnerFilterType.getSelectedItem().toString().toLowerCase();
+
+        if (!searchText.isEmpty()) {
+            Query query = eventRepository.getAllEventsForAdminQuery()
+                    .orderByChild(filterType)
+                    .startAt(searchText)
+                    .endAt(searchText + "\uf8ff");
+            updateRecyclerView(query);
+        } else {
+            updateRecyclerView(eventRepository.getEventsQuery());
+        }
     }
 
     private void setupRecyclerView(Query query) {
@@ -79,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
                 holder.tvLocation.setText(model.getLocation());
                 holder.tvPrice.setText("$" + model.getPrice());
                 holder.tvSeats.setText("Seats: " + model.getAvailableSeats());
+                holder.tvCategory.setText(model.getCategory());
 
                 holder.itemView.setOnClickListener(v -> {
                     Intent intent = new Intent(MainActivity.this, EventDetailActivity.class);
@@ -119,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public static class EventViewHolder extends RecyclerView.ViewHolder {
-        TextView tvTitle, tvDate, tvLocation, tvPrice, tvSeats;
+        TextView tvTitle, tvDate, tvLocation, tvPrice, tvSeats, tvCategory;
 
         public EventViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -128,6 +147,7 @@ public class MainActivity extends AppCompatActivity {
             tvLocation = itemView.findViewById(R.id.tvEventLocation);
             tvPrice = itemView.findViewById(R.id.tvEventPrice);
             tvSeats = itemView.findViewById(R.id.tvAvailableSeats);
+            tvCategory = itemView.findViewById(R.id.tvEventCategory);
         }
     }
 
