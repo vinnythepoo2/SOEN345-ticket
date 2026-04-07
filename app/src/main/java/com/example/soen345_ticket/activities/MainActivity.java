@@ -20,6 +20,7 @@ import com.example.soen345_ticket.repositories.EventRepository;
 import com.example.soen345_ticket.repositories.UserRepository;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.example.soen345_ticket.utils.FilterHelper;
 import com.google.firebase.database.Query;
 
 public class MainActivity extends AppCompatActivity {
@@ -28,12 +29,6 @@ public class MainActivity extends AppCompatActivity {
     private UserRepository userRepository;
     private FirebaseRecyclerAdapter<Event, EventViewHolder> adapter;
 
-    // Hints shown in the filter value field based on the selected filter type
-    private static final String[] FILTER_HINTS = {
-        "e.g. 2024-01-15",           // Date
-        "e.g. Music, Sports, Tech",  // Category
-        "e.g. Montreal, Quebec"      // Location
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 // Update hint to guide the user with an example value
-                binding.etFilterValue.setHint(FILTER_HINTS[position]);
+                binding.etFilterValue.setHint(FilterHelper.getFilterHint(position));
                 binding.etFilterValue.setText("");
             }
 
@@ -104,11 +99,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void performTitleSearch() {
         String searchText = binding.etSearch.getText().toString().trim();
-        if (!searchText.isEmpty()) {
+        if (FilterHelper.isValidInput(searchText)) {
             Query query = eventRepository.getAllEventsForAdminQuery()
                     .orderByChild("title")
                     .startAt(searchText)
-                    .endAt(searchText + "\uf8ff");
+                    .endAt(FilterHelper.buildRangeEnd(searchText));
             updateRecyclerView(query);
         } else {
             updateRecyclerView(eventRepository.getEventsQuery());
@@ -117,13 +112,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void performFieldFilter() {
         String filterValue = binding.etFilterValue.getText().toString().trim();
-        String filterType = binding.spinnerFilterType.getSelectedItem().toString().toLowerCase();
+        String filterType = FilterHelper.toFirebaseField(
+                binding.spinnerFilterType.getSelectedItem().toString());
 
-        if (!filterValue.isEmpty()) {
+        if (FilterHelper.isValidInput(filterValue)) {
             Query query = eventRepository.getAllEventsForAdminQuery()
                     .orderByChild(filterType)
                     .startAt(filterValue)
-                    .endAt(filterValue + "\uf8ff");
+                    .endAt(FilterHelper.buildRangeEnd(filterValue));
             updateRecyclerView(query);
         } else {
             updateRecyclerView(eventRepository.getEventsQuery());
