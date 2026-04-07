@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.firebase.ui.database)
 
     testImplementation(libs.junit)
+    testImplementation(libs.json)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }
@@ -77,8 +78,8 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         "**/*Test*.*", "android/**/*.*"
     )
     
-    // Modern path for Java classes
-    val debugTree = fileTree(layout.buildDirectory.dir("intermediates/javac/debug/classes")) {
+    // Modern path for Java classes (AGP 9 adds compileDebugJavaWithJavac subdirectory)
+    val debugTree = fileTree(layout.buildDirectory.dir("intermediates/javac/debug/compileDebugJavaWithJavac/classes")) {
         exclude(fileFilter)
     }
     val mainSrc = "${projectDir}/src/main/java"
