@@ -38,6 +38,9 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 sonar {
@@ -61,6 +64,8 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.json)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.mockito.core)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }
@@ -94,4 +99,11 @@ tasks.register<JacocoReport>("jacocoTestReport") {
             "outputs/code_coverage/debugAndroidTest/connected/*coverage.ec"
         )
     })
+}
+
+tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
+    extensions.configure(org.gradle.testing.jacoco.plugins.JacocoTaskExtension::class.java) {
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
+    }
 }

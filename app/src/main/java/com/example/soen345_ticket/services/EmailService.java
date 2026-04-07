@@ -1,6 +1,7 @@
 package com.example.soen345_ticket.services;
 
 import java.io.OutputStream;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -17,6 +18,10 @@ public class EmailService {
 
     private final Executor   executor;
     private final HttpSender httpSender;
+
+    interface ConnectionFactory {
+        HttpURLConnection open(URL url) throws IOException;
+    }
 
     /** Production constructor — uses real HTTP. */
     public EmailService() {
@@ -65,9 +70,13 @@ public class EmailService {
     }
 
     private static HttpSender buildRealSender() {
+        return buildRealSender(url -> (HttpURLConnection) url.openConnection());
+    }
+
+    static HttpSender buildRealSender(ConnectionFactory connectionFactory) {
         return jsonBody -> {
             URL url = new URL(API_URL);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            HttpURLConnection conn = connectionFactory.open(url);
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setRequestProperty("origin", "http://localhost");
