@@ -28,6 +28,13 @@ public class MainActivity extends AppCompatActivity {
     private UserRepository userRepository;
     private FirebaseRecyclerAdapter<Event, EventViewHolder> adapter;
 
+    // Hints shown in the filter value field based on the selected filter type
+    private static final String[] FILTER_HINTS = {
+        "e.g. 2024-01-15",           // Date
+        "e.g. Music, Sports, Tech",  // Category
+        "e.g. Montreal, Quebec"      // Location
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,23 +47,14 @@ public class MainActivity extends AppCompatActivity {
         userRepository = new UserRepository();
 
         setupRecyclerView(eventRepository.getEventsQuery());
+        setupTabToggle();
+        setupFilterSpinner();
 
-        binding.btnFilter.setOnClickListener(v -> {
-            performSearch();
-        });
+        // Search tab: search by title
+        binding.btnFilter.setOnClickListener(v -> performTitleSearch());
 
-        binding.spinnerFilterType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String searchText = binding.etSearch.getText().toString().trim();
-                if (!searchText.isEmpty()) {
-                    performSearch();
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
+        // Filter tab: apply selected filter field
+        binding.btnApplyFilter.setOnClickListener(v -> performFieldFilter());
 
         binding.btnMyReservations.setOnClickListener(v -> {
             startActivity(new Intent(this, MyReservationsActivity.class));
@@ -69,15 +67,63 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void performSearch() {
-        String searchText = binding.etSearch.getText().toString().trim();
-        String filterType = binding.spinnerFilterType.getSelectedItem().toString().toLowerCase();
+    private void setupTabToggle() {
+        // Search tab selected by default
+        binding.btnTabSearch.setOnClickListener(v -> {
+            binding.searchPanel.setVisibility(View.VISIBLE);
+            binding.filterPanel.setVisibility(View.GONE);
+            binding.btnTabSearch.setBackgroundResource(R.drawable.tab_selected_bg);
+            binding.btnTabFilter.setBackgroundResource(R.drawable.tab_unselected_bg);
+            // Reset to all events when switching tabs
+            updateRecyclerView(eventRepository.getEventsQuery());
+        });
 
+        binding.btnTabFilter.setOnClickListener(v -> {
+            binding.searchPanel.setVisibility(View.GONE);
+            binding.filterPanel.setVisibility(View.VISIBLE);
+            binding.btnTabFilter.setBackgroundResource(R.drawable.tab_selected_bg);
+            binding.btnTabSearch.setBackgroundResource(R.drawable.tab_unselected_bg);
+            // Reset to all events when switching tabs
+            updateRecyclerView(eventRepository.getEventsQuery());
+        });
+    }
+
+    private void setupFilterSpinner() {
+        binding.spinnerFilterType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                // Update hint to guide the user with an example value
+                binding.etFilterValue.setHint(FILTER_HINTS[position]);
+                binding.etFilterValue.setText("");
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+    }
+
+    private void performTitleSearch() {
+        String searchText = binding.etSearch.getText().toString().trim();
         if (!searchText.isEmpty()) {
             Query query = eventRepository.getAllEventsForAdminQuery()
-                    .orderByChild(filterType)
+                    .orderByChild("title")
                     .startAt(searchText)
                     .endAt(searchText + "\uf8ff");
+            updateRecyclerView(query);
+        } else {
+            updateRecyclerView(eventRepository.getEventsQuery());
+        }
+    }
+
+    private void performFieldFilter() {
+        String filterValue = binding.etFilterValue.getText().toString().trim();
+        String filterType = binding.spinnerFilterType.getSelectedItem().toString().toLowerCase();
+
+        if (!filterValue.isEmpty()) {
+            Query query = eventRepository.getAllEventsForAdminQuery()
+                    .orderByChild(filterType)
+                    .startAt(filterValue)
+                    .endAt(filterValue + "\uf8ff");
             updateRecyclerView(query);
         } else {
             updateRecyclerView(eventRepository.getEventsQuery());
