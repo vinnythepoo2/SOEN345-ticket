@@ -12,7 +12,7 @@ import com.example.soen345_ticket.models.Reservation;
 import com.example.soen345_ticket.repositories.ReservationRepository;
 import com.example.soen345_ticket.repositories.UserRepository;
 import com.example.soen345_ticket.services.EmailService;
-import com.example.soen345_ticket.utils.BookingHelper;
+import com.example.soen345_ticket.services.ReservationEmailNotifier;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import java.text.SimpleDateFormat;
@@ -25,6 +25,7 @@ public class ReservationActivity extends AppCompatActivity {
     private ReservationRepository reservationRepository;
     private UserRepository userRepository;
     private EmailService emailService;
+    private ReservationEmailNotifier reservationEmailNotifier;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +44,7 @@ public class ReservationActivity extends AppCompatActivity {
         reservationRepository = new ReservationRepository();
         userRepository = new UserRepository();
         emailService = new EmailService();
+        reservationEmailNotifier = new ReservationEmailNotifier();
 
         if (event != null) {
             binding.tvEventTitle.setText(event.getTitle());
@@ -90,22 +92,12 @@ public class ReservationActivity extends AppCompatActivity {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null || currentUser.getEmail() == null) return;
 
-        double totalPrice = BookingHelper.calculateTotal(quantity, event.getPrice());
-
-        emailService.sendBookingConfirmation(
+        reservationEmailNotifier.sendConfirmationEmail(
+                emailService,
+                event,
                 currentUser.getEmail(),
-                event.getTitle(),
-                event.getDate(),
-                event.getLocation(),
                 quantity,
-                totalPrice,
-                bookingDate,
-                new EmailService.EmailCallback() {
-                    @Override public void onSuccess() {}
-                    @Override public void onFailure(String error) {
-                        android.util.Log.e("ReservationActivity", "Email failed: " + error);
-                    }
-                }
+                bookingDate
         );
     }
 

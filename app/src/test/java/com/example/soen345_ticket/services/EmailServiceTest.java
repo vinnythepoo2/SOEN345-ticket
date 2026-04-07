@@ -1,7 +1,6 @@
 package com.example.soen345_ticket.services;
 
 import static org.junit.Assert.*;
-import org.junit.Before;
 import org.junit.Test;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
@@ -115,6 +114,7 @@ public class EmailServiceTest {
     public void defaultConstructor_doesNotThrow() {
         // Exercises EmailService() and buildRealSender(); the lambda body is never
         // invoked so no real network call is made.
-        new EmailService();
+        EmailService service = new EmailService();
+        assertNotNull(service);
     }
 }
