@@ -12,6 +12,7 @@ import com.example.soen345_ticket.models.Reservation;
 import com.example.soen345_ticket.repositories.ReservationRepository;
 import com.example.soen345_ticket.repositories.UserRepository;
 import com.example.soen345_ticket.services.EmailService;
+import com.example.soen345_ticket.utils.BookingHelper;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import java.text.SimpleDateFormat;
@@ -89,7 +90,7 @@ public class ReservationActivity extends AppCompatActivity {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null || currentUser.getEmail() == null) return;
 
-        double totalPrice = quantity * event.getPrice();
+        double totalPrice = BookingHelper.calculateTotal(quantity, event.getPrice());
 
         emailService.sendBookingConfirmation(
                 currentUser.getEmail(),

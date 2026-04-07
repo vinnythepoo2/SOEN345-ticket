@@ -108,4 +108,13 @@ public class EmailServiceTest {
         assertTrue(sender.lastBody.contains("user@example.com"));
         assertTrue(sender.lastBody.contains("Jazz Night"));
     }
+
+    // ── Default (production) constructor ──────────────────────────────────────
+
+    @Test
+    public void defaultConstructor_doesNotThrow() {
+        // Exercises EmailService() and buildRealSender(); the lambda body is never
+        // invoked so no real network call is made.
+        new EmailService();
+    }
 }
