@@ -1,8 +1,19 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services)
     id("jacoco")
 }
+
+val localProperties = Properties().apply {
+    val localFile = rootProject.file("local.properties")
+    if (localFile.exists()) {
+        localFile.inputStream().use { load(it) }
+    }
+}
+
+fun localProperty(key: String): String = localProperties.getProperty(key, "")
 
 android {
     namespace = "com.example.soen345_ticket"
@@ -16,6 +27,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "EMAILJS_SERVICE_ID", "\"${localProperty("EMAILJS_SERVICE_ID")}\"")
+        buildConfigField("String", "EMAILJS_TEMPLATE_ID", "\"${localProperty("EMAILJS_TEMPLATE_ID")}\"")
+        buildConfigField("String", "EMAILJS_PUBLIC_KEY", "\"${localProperty("EMAILJS_PUBLIC_KEY")}\"")
     }
 
     buildTypes {
@@ -36,7 +51,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures {
+        buildConfig = true
         viewBinding = true
+    }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
     }
 }
 
@@ -60,6 +79,9 @@ dependencies {
     implementation(libs.firebase.ui.database)
 
     testImplementation(libs.junit)
+    testImplementation(libs.json)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.core)
 
     androidTestImplementation(libs.ext.junit)
@@ -79,8 +101,8 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         "**/*Test*.*", "android/**/*.*"
     )
     
-    // Modern path for Java classes
-    val debugTree = fileTree(layout.buildDirectory.dir("intermediates/javac/debug/classes")) {
+    // Modern path for Java classes (AGP 9 adds compileDebugJavaWithJavac subdirectory)
+    val debugTree = fileTree(layout.buildDirectory.dir("intermediates/javac/debug/compileDebugJavaWithJavac/classes")) {
         exclude(fileFilter)
     }
     val mainSrc = "${projectDir}/src/main/java"
@@ -95,4 +117,11 @@ tasks.register<JacocoReport>("jacocoTestReport") {
             "outputs/code_coverage/debugAndroidTest/connected/*coverage.ec"
         )
     })
+}
+
+tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
+    extensions.configure(org.gradle.testing.jacoco.plugins.JacocoTaskExtension::class.java) {
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
+    }
 }

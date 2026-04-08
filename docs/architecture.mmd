@@ -1,0 +1,74 @@
+flowchart TB
+    subgraph UI[Presentation Layer - Activities]
+        Splash[SplashActivity]
+        Login[LoginActivity]
+        Register[RegisterActivity]
+
+        Main[MainActivity\nCustomer Dashboard]
+        EventDetail[EventDetailActivity]
+        ReservationAct[ReservationActivity]
+        MyReservations[MyReservationsActivity]
+
+        Admin[AdminDashboardActivity]
+        AddEdit[AddEditEventActivity]
+    end
+
+    subgraph Repo[Data Access Layer - Repositories]
+        UserRepo[UserRepository]
+        EventRepo[EventRepository]
+        ReservationRepo[ReservationRepository]
+    end
+
+    subgraph Model[Models]
+        UserM[User]
+        EventM[Event]
+        ReservationM[Reservation]
+    end
+
+    subgraph Firebase[Firebase]
+        Auth[Firebase Auth]
+        DB[(Realtime Database)]
+        UsersNode[/users/]
+        EventsNode[/events/]
+        ReservationsNode[/reservations/]
+    end
+
+    Splash --> Login
+    Splash --> Main
+    Splash --> Admin
+
+    Login --> Main
+    Login --> Admin
+    Register --> Main
+    Register --> Admin
+
+    Main --> EventDetail --> ReservationAct --> Main
+    Main --> MyReservations
+
+    Admin --> AddEdit --> Admin
+
+    Login --> UserRepo
+    Register --> UserRepo
+    Splash --> UserRepo
+    Main --> UserRepo
+    Admin --> UserRepo
+
+    Main --> EventRepo
+    Admin --> EventRepo
+    AddEdit --> EventRepo
+
+    ReservationAct --> ReservationRepo
+    MyReservations --> ReservationRepo
+
+    UserRepo --> UserM
+    EventRepo --> EventM
+    ReservationRepo --> ReservationM
+
+    UserRepo --> Auth
+    UserRepo --> DB
+    EventRepo --> DB
+    ReservationRepo --> DB
+
+    DB --> UsersNode
+    DB --> EventsNode
+    DB --> ReservationsNode

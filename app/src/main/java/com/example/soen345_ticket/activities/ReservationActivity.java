@@ -11,6 +11,10 @@ import com.example.soen345_ticket.models.Event;
 import com.example.soen345_ticket.models.Reservation;
 import com.example.soen345_ticket.repositories.ReservationRepository;
 import com.example.soen345_ticket.repositories.UserRepository;
+import com.example.soen345_ticket.services.EmailService;
+import com.example.soen345_ticket.services.ReservationEmailNotifier;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -20,6 +24,8 @@ public class ReservationActivity extends AppCompatActivity {
     private Event event;
     private ReservationRepository reservationRepository;
     private UserRepository userRepository;
+    private EmailService emailService;
+    private ReservationEmailNotifier reservationEmailNotifier;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +41,10 @@ public class ReservationActivity extends AppCompatActivity {
         }
 
         event = (Event) getIntent().getSerializableExtra("event");
-        reservationRepository = new ReservationRepository();
-        userRepository = new UserRepository();
+        reservationRepository = createReservationRepository();
+        userRepository = createUserRepository();
+        emailService = createEmailService();
+        reservationEmailNotifier = createReservationEmailNotifier();
 
         if (event != null) {
             binding.tvEventTitle.setText(event.getTitle());
@@ -57,16 +65,16 @@ public class ReservationActivity extends AppCompatActivity {
             binding.btnConfirm.setOnClickListener(v -> {
                 String qtyStr = binding.etQuantity.getText().toString();
                 if (qtyStr.isEmpty()) {
-                    Toast.makeText(this, "Enter quantity", Toast.LENGTH_SHORT).show();
+                    showToast("Enter quantity", Toast.LENGTH_SHORT);
                     return;
                 }
                 int quantity = Integer.parseInt(qtyStr);
                 if (quantity <= 0) {
-                    Toast.makeText(this, "Quantity must be at least 1", Toast.LENGTH_SHORT).show();
+                    showToast("Quantity must be at least 1", Toast.LENGTH_SHORT);
                     return;
                 }
                 if (quantity > event.getAvailableSeats()) {
-                    Toast.makeText(this, "Not enough seats available", Toast.LENGTH_SHORT).show();
+                    showToast("Not enough seats available", Toast.LENGTH_SHORT);
                     return;
                 }
 
@@ -78,6 +86,19 @@ public class ReservationActivity extends AppCompatActivity {
                 onBackPressed();
             });
         }
+    }
+
+    private void sendConfirmationEmail(int quantity, String bookingDate) {
+        FirebaseUser currentUser = getCurrentFirebaseUser();
+        if (currentUser == null || currentUser.getEmail() == null) return;
+
+        reservationEmailNotifier.sendConfirmationEmail(
+                emailService,
+                event,
+                currentUser.getEmail(),
+                quantity,
+                bookingDate
+        );
     }
 
     private void updateTotal() {
@@ -93,7 +114,7 @@ public class ReservationActivity extends AppCompatActivity {
 
     private void confirmBooking(int quantity) {
         String userId = userRepository.getCurrentUserId();
-        String date = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(new Date());
+        String date = getCurrentTimestamp();
 
         Reservation reservation = new Reservation(
                 null,
@@ -107,14 +128,50 @@ public class ReservationActivity extends AppCompatActivity {
 
         reservationRepository.createReservation(reservation, quantity).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                Toast.makeText(this, "Reservation confirmed!", Toast.LENGTH_LONG).show();
-                Intent intent = new Intent(this, MainActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-                finish();
+                showToast("Reservation confirmed!", Toast.LENGTH_LONG);
+                sendConfirmationEmail(quantity, date);
+                navigateToMain();
             } else {
-                Toast.makeText(this, "Failed: " + (task.getException() != null ? task.getException().getMessage() : "Unknown error"), Toast.LENGTH_SHORT).show();
+                showToast(
+                        "Failed: " + (task.getException() != null ? task.getException().getMessage() : "Unknown error"),
+                        Toast.LENGTH_SHORT
+                );
             }
         });
+    }
+
+    protected ReservationRepository createReservationRepository() {
+        return new ReservationRepository();
+    }
+
+    protected UserRepository createUserRepository() {
+        return new UserRepository();
+    }
+
+    protected EmailService createEmailService() {
+        return new EmailService();
+    }
+
+    protected ReservationEmailNotifier createReservationEmailNotifier() {
+        return new ReservationEmailNotifier();
+    }
+
+    protected FirebaseUser getCurrentFirebaseUser() {
+        return FirebaseAuth.getInstance().getCurrentUser();
+    }
+
+    protected String getCurrentTimestamp() {
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(new Date());
+    }
+
+    protected void showToast(String message, int duration) {
+        Toast.makeText(this, message, duration).show();
+    }
+
+    protected void navigateToMain() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+        finish();
     }
 }
