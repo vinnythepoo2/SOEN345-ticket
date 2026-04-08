@@ -20,13 +20,15 @@ import com.example.soen345_ticket.repositories.EventRepository;
 import com.example.soen345_ticket.repositories.UserRepository;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.example.soen345_ticket.utils.FilterHelper;
 import com.google.firebase.database.Query;
 
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private EventRepository eventRepository;
     private UserRepository userRepository;
-    private FirebaseRecyclerAdapter<Event, EventViewHolder> adapter;
+    protected FirebaseRecyclerAdapter<Event, EventViewHolder> adapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,27 +38,18 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(binding.toolbar);
 
-        eventRepository = new EventRepository();
-        userRepository = new UserRepository();
+        eventRepository = createEventRepository();
+        userRepository = createUserRepository();
 
         setupRecyclerView(eventRepository.getEventsQuery());
+        setupTabToggle();
+        setupFilterSpinner();
 
-        binding.btnFilter.setOnClickListener(v -> {
-            performSearch();
-        });
+        // Search tab: search by title
+        binding.btnFilter.setOnClickListener(v -> performTitleSearch());
 
-        binding.spinnerFilterType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String searchText = binding.etSearch.getText().toString().trim();
-                if (!searchText.isEmpty()) {
-                    performSearch();
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
+        // Filter tab: apply selected filter field
+        binding.btnApplyFilter.setOnClickListener(v -> performFieldFilter());
 
         binding.btnMyReservations.setOnClickListener(v -> {
             startActivity(new Intent(this, MyReservationsActivity.class));
@@ -69,22 +62,75 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void performSearch() {
-        String searchText = binding.etSearch.getText().toString().trim();
-        String filterType = binding.spinnerFilterType.getSelectedItem().toString().toLowerCase();
+    protected EventRepository createEventRepository() { return new EventRepository(); }
 
-        if (!searchText.isEmpty()) {
+    protected UserRepository createUserRepository() { return new UserRepository(); }
+
+    private void setupTabToggle() {
+        // Search tab selected by default
+        binding.btnTabSearch.setOnClickListener(v -> {
+            binding.searchPanel.setVisibility(View.VISIBLE);
+            binding.filterPanel.setVisibility(View.GONE);
+            binding.btnTabSearch.setBackgroundResource(R.drawable.tab_selected_bg);
+            binding.btnTabFilter.setBackgroundResource(R.drawable.tab_unselected_bg);
+            // Reset to all events when switching tabs
+            updateRecyclerView(eventRepository.getEventsQuery());
+        });
+
+        binding.btnTabFilter.setOnClickListener(v -> {
+            binding.searchPanel.setVisibility(View.GONE);
+            binding.filterPanel.setVisibility(View.VISIBLE);
+            binding.btnTabFilter.setBackgroundResource(R.drawable.tab_selected_bg);
+            binding.btnTabSearch.setBackgroundResource(R.drawable.tab_unselected_bg);
+            // Reset to all events when switching tabs
+            updateRecyclerView(eventRepository.getEventsQuery());
+        });
+    }
+
+    private void setupFilterSpinner() {
+        binding.spinnerFilterType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                // Update hint to guide the user with an example value
+                binding.etFilterValue.setHint(FilterHelper.getFilterHint(position));
+                binding.etFilterValue.setText("");
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+    }
+
+    private void performTitleSearch() {
+        String searchText = binding.etSearch.getText().toString().trim();
+        if (FilterHelper.isValidInput(searchText)) {
             Query query = eventRepository.getAllEventsForAdminQuery()
-                    .orderByChild(filterType)
+                    .orderByChild("title")
                     .startAt(searchText)
-                    .endAt(searchText + "\uf8ff");
+                    .endAt(FilterHelper.buildRangeEnd(searchText));
             updateRecyclerView(query);
         } else {
             updateRecyclerView(eventRepository.getEventsQuery());
         }
     }
 
-    private void setupRecyclerView(Query query) {
+    private void performFieldFilter() {
+        String filterValue = binding.etFilterValue.getText().toString().trim();
+        String filterType = FilterHelper.toFirebaseField(
+                binding.spinnerFilterType.getSelectedItem().toString());
+
+        if (FilterHelper.isValidInput(filterValue)) {
+            Query query = eventRepository.getAllEventsForAdminQuery()
+                    .orderByChild(filterType)
+                    .startAt(filterValue)
+                    .endAt(FilterHelper.buildRangeEnd(filterValue));
+            updateRecyclerView(query);
+        } else {
+            updateRecyclerView(eventRepository.getEventsQuery());
+        }
+    }
+
+    protected void setupRecyclerView(Query query) {
         FirebaseRecyclerOptions<Event> options = new FirebaseRecyclerOptions.Builder<Event>()
                 .setQuery(query, Event.class)
                 .build();
@@ -118,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
         binding.rvEvents.setAdapter(adapter);
     }
 
-    private void updateRecyclerView(Query query) {
+    protected void updateRecyclerView(Query query) {
         FirebaseRecyclerOptions<Event> options = new FirebaseRecyclerOptions.Builder<Event>()
                 .setQuery(query, Event.class)
                 .build();
