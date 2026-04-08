@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private EventRepository eventRepository;
     private UserRepository userRepository;
-    private FirebaseRecyclerAdapter<Event, EventViewHolder> adapter;
+    protected FirebaseRecyclerAdapter<Event, EventViewHolder> adapter;
 
 
     @Override
@@ -38,8 +38,8 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(binding.toolbar);
 
-        eventRepository = new EventRepository();
-        userRepository = new UserRepository();
+        eventRepository = createEventRepository();
+        userRepository = createUserRepository();
 
         setupRecyclerView(eventRepository.getEventsQuery());
         setupTabToggle();
@@ -61,6 +61,10 @@ public class MainActivity extends AppCompatActivity {
             finish();
         });
     }
+
+    protected EventRepository createEventRepository() { return new EventRepository(); }
+
+    protected UserRepository createUserRepository() { return new UserRepository(); }
 
     private void setupTabToggle() {
         // Search tab selected by default
@@ -126,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setupRecyclerView(Query query) {
+    protected void setupRecyclerView(Query query) {
         FirebaseRecyclerOptions<Event> options = new FirebaseRecyclerOptions.Builder<Event>()
                 .setQuery(query, Event.class)
                 .build();
@@ -160,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
         binding.rvEvents.setAdapter(adapter);
     }
 
-    private void updateRecyclerView(Query query) {
+    protected void updateRecyclerView(Query query) {
         FirebaseRecyclerOptions<Event> options = new FirebaseRecyclerOptions.Builder<Event>()
                 .setQuery(query, Event.class)
                 .build();
