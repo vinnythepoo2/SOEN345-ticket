@@ -1,5 +1,6 @@
 package com.example.soen345_ticket.services;
 
+import com.example.soen345_ticket.BuildConfig;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -12,9 +13,9 @@ public class EmailService {
 
     private static final String API_URL  = "https://api.emailjs.com/api/v1.0/email/send";
 
-    private static final String SERVICE_ID  = "service_of4etu4";
-    private static final String TEMPLATE_ID = "template_4vsvzpx";
-    private static final String PUBLIC_KEY  = "9cijQnqUbAi1q5I9J";
+    private static final String SERVICE_ID  = BuildConfig.EMAILJS_SERVICE_ID;
+    private static final String TEMPLATE_ID = BuildConfig.EMAILJS_TEMPLATE_ID;
+    private static final String PUBLIC_KEY  = BuildConfig.EMAILJS_PUBLIC_KEY;
 
     private final Executor   executor;
     private final HttpSender httpSender;
