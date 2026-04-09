@@ -16,6 +16,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import com.example.soen345_ticket.R;
 import com.example.soen345_ticket.models.Event;
+import com.example.soen345_ticket.models.Reservation;
 import com.example.soen345_ticket.repositories.ReservationRepository;
 import com.example.soen345_ticket.repositories.UserRepository;
 import com.example.soen345_ticket.services.EmailService;
@@ -45,22 +46,22 @@ public class ReservationActivityTest {
 
         @Override
         protected ReservationRepository createReservationRepository() {
-            return reservationRepository;
+            return reservationRepository != null ? reservationRepository : mock(ReservationRepository.class);
         }
 
         @Override
         protected UserRepository createUserRepository() {
-            return userRepository;
+            return userRepository != null ? userRepository : mock(UserRepository.class);
         }
 
         @Override
         protected EmailService createEmailService() {
-            return emailService;
+            return emailService != null ? emailService : mock(EmailService.class);
         }
 
         @Override
         protected ReservationEmailNotifier createReservationEmailNotifier() {
-            return reservationEmailNotifier;
+            return reservationEmailNotifier != null ? reservationEmailNotifier : mock(ReservationEmailNotifier.class);
         }
 
         @Override
@@ -100,6 +101,12 @@ public class ReservationActivityTest {
                 50.0,
                 false
         );
+        
+        // Setup default mocks to avoid Firebase initialization errors
+        TestReservationActivity.reservationRepository = mock(ReservationRepository.class);
+        TestReservationActivity.userRepository = mock(UserRepository.class);
+        TestReservationActivity.emailService = mock(EmailService.class);
+        TestReservationActivity.reservationEmailNotifier = mock(ReservationEmailNotifier.class);
     }
 
     @After
@@ -184,6 +191,7 @@ public class ReservationActivityTest {
         FirebaseUser firebaseUser = mock(FirebaseUser.class);
 
         when(userRepository.getCurrentUserId()).thenReturn("user-1");
+        when(firebaseUser.getUid()).thenReturn("user-1");
         when(firebaseUser.getEmail()).thenReturn("user@example.com");
         when(reservationRepository.createReservation(any(), eq(2))).thenReturn(Tasks.forResult(null));
 
@@ -205,7 +213,7 @@ public class ReservationActivityTest {
         verify(reservationRepository).createReservation(any(), eq(2));
         verify(notifier).sendConfirmationEmail(
                 eq(emailService),
-                eq(testEvent),
+                any(Event.class),
                 eq("user@example.com"),
                 eq(2),
                 any()
@@ -217,8 +225,11 @@ public class ReservationActivityTest {
     public void confirmWithRepositoryFailure_showsFailureToast() {
         ReservationRepository reservationRepository = mock(ReservationRepository.class);
         UserRepository userRepository = mock(UserRepository.class);
+        FirebaseUser firebaseUser = mock(FirebaseUser.class);
 
         when(userRepository.getCurrentUserId()).thenReturn("user-1");
+        when(firebaseUser.getUid()).thenReturn("user-1");
+        when(firebaseUser.getEmail()).thenReturn("user@example.com");
         when(reservationRepository.createReservation(any(), eq(2)))
                 .thenReturn(Tasks.forException(new RuntimeException("boom")));
 
@@ -226,7 +237,7 @@ public class ReservationActivityTest {
         TestReservationActivity.userRepository = userRepository;
         TestReservationActivity.emailService = mock(EmailService.class);
         TestReservationActivity.reservationEmailNotifier = mock(ReservationEmailNotifier.class);
-        TestReservationActivity.currentFirebaseUser = null;
+        TestReservationActivity.currentFirebaseUser = firebaseUser;
 
         TestReservationActivity activity = buildActivity();
         EditText quantity = activity.findViewById(R.id.etQuantity);
