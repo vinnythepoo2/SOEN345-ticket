@@ -1,4 +1,4 @@
-package com.example.soen345_ticket;
+package com.example.soen345_ticket.integration;
 
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -15,6 +15,7 @@ import com.example.soen345_ticket.models.User;
 import com.example.soen345_ticket.repositories.EventRepository;
 import com.example.soen345_ticket.repositories.ReservationRepository;
 import com.example.soen345_ticket.services.EventController;
+import com.example.soen345_ticket.services.NetworkChecker;
 import com.example.soen345_ticket.services.NotificationService;
 import com.example.soen345_ticket.services.ReservationService;
 import com.google.android.gms.tasks.Tasks;
@@ -38,6 +39,8 @@ public class EndToEndIntegrationTest {
     @Mock
     private NotificationService notificationService;
     @Mock
+    private NetworkChecker networkChecker;
+    @Mock
     private Query mockQuery;
 
     private EventController eventController;
@@ -47,7 +50,11 @@ public class EndToEndIntegrationTest {
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         eventController = new EventController(eventRepository);
-        reservationService = new ReservationService(reservationRepository, notificationService);
+        
+        // Ensure network is available for integration flow
+        when(networkChecker.isAvailable()).thenReturn(true);
+        
+        reservationService = new ReservationService(reservationRepository, notificationService, networkChecker);
     }
 
     @Test

@@ -14,9 +14,11 @@ import com.example.soen345_ticket.repositories.ReservationRepository;
 import com.example.soen345_ticket.repositories.UserRepository;
 import com.example.soen345_ticket.services.EmailNotificationService;
 import com.example.soen345_ticket.services.EmailService;
+import com.example.soen345_ticket.services.NetworkChecker;
 import com.example.soen345_ticket.services.NotificationService;
 import com.example.soen345_ticket.services.ReservationEmailNotifier;
 import com.example.soen345_ticket.services.ReservationService;
+import com.example.soen345_ticket.utils.NetworkUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import java.text.SimpleDateFormat;
@@ -147,7 +149,8 @@ public class ReservationActivity extends AppCompatActivity {
 
     protected ReservationService createReservationService() {
         NotificationService notificationService = new EmailNotificationService(createEmailService(), createReservationEmailNotifier());
-        return new ReservationService(createReservationRepository(), notificationService);
+        NetworkChecker networkChecker = () -> NetworkUtils.isNetworkAvailable(this);
+        return new ReservationService(createReservationRepository(), notificationService, networkChecker);
     }
 
     protected FirebaseUser getCurrentFirebaseUser() {
