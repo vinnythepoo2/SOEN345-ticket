@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -245,6 +246,7 @@ public class ReservationActivityTest {
         FirebaseUser firebaseUser = mock(FirebaseUser.class);
 
         when(firebaseUser.getUid()).thenReturn("user-1");
+        when(firebaseUser.getEmail()).thenReturn("user@example.com");
         when(reservationService.processReservation(any(), eq(2), any()))
                 .thenReturn(Tasks.forException(new RuntimeException("boom")));
 

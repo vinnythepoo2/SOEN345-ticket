@@ -11,6 +11,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.os.Looper;
+
 import com.example.soen345_ticket.models.Reservation;
 import com.example.soen345_ticket.models.User;
 import com.example.soen345_ticket.repositories.ReservationRepository;
@@ -21,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.Shadows;
 
 @RunWith(RobolectricTestRunner.class)
 public class ReservationServiceTest {
@@ -63,6 +66,9 @@ public class ReservationServiceTest {
         when(repository.createReservation(any(), eq(1))).thenReturn(Tasks.forResult(null));
 
         Task<Void> task = service.processReservation(res, 1, user);
+        
+        // Essential: force task listeners to execute
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
 
         assertTrue(task.isSuccessful());
         verify(notificationService).sendReservationConfirmation(eq("test@test.com"), eq(res));
@@ -78,6 +84,9 @@ public class ReservationServiceTest {
         when(repository.createReservation(any(), anyInt())).thenReturn(Tasks.forException(error));
 
         Task<Void> task = service.processReservation(res, 1, user);
+        
+        // force task listeners to execute
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
 
         assertFalse(task.isSuccessful());
         assertEquals(error, task.getException());
@@ -94,6 +103,8 @@ public class ReservationServiceTest {
         when(repository.createReservation(any(), anyInt())).thenReturn(Tasks.forResult(null));
 
         Task<Void> task = service.processReservation(res, 1, user);
+        
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
 
         assertTrue(task.isSuccessful());
         verify(repository).createReservation(any(), anyInt());
