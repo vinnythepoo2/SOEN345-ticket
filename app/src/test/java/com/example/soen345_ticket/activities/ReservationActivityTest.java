@@ -21,6 +21,7 @@ import com.example.soen345_ticket.repositories.ReservationRepository;
 import com.example.soen345_ticket.repositories.UserRepository;
 import com.example.soen345_ticket.services.EmailService;
 import com.example.soen345_ticket.services.ReservationEmailNotifier;
+import com.example.soen345_ticket.services.ReservationService;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseUser;
 import org.junit.After;
@@ -41,27 +42,33 @@ public class ReservationActivityTest {
         static UserRepository userRepository;
         static EmailService emailService;
         static ReservationEmailNotifier reservationEmailNotifier;
+        static ReservationService reservationService;
         static FirebaseUser currentFirebaseUser;
         boolean backPressed;
 
         @Override
         protected ReservationRepository createReservationRepository() {
-            return reservationRepository != null ? reservationRepository : mock(ReservationRepository.class);
+            return reservationRepository != null ? reservationRepository : super.createReservationRepository();
         }
 
         @Override
         protected UserRepository createUserRepository() {
-            return userRepository != null ? userRepository : mock(UserRepository.class);
+            return userRepository != null ? userRepository : super.createUserRepository();
         }
 
         @Override
         protected EmailService createEmailService() {
-            return emailService != null ? emailService : mock(EmailService.class);
+            return emailService != null ? emailService : super.createEmailService();
         }
 
         @Override
         protected ReservationEmailNotifier createReservationEmailNotifier() {
-            return reservationEmailNotifier != null ? reservationEmailNotifier : mock(ReservationEmailNotifier.class);
+            return reservationEmailNotifier != null ? reservationEmailNotifier : super.createReservationEmailNotifier();
+        }
+
+        @Override
+        protected ReservationService createReservationService() {
+            return reservationService != null ? reservationService : super.createReservationService();
         }
 
         @Override
@@ -75,11 +82,17 @@ public class ReservationActivityTest {
             super.onBackPressed();
         }
 
+        @Override
+        public String getCurrentTimestamp() {
+            return "2025-01-01 12:00";
+        }
+
         static void reset() {
             reservationRepository = null;
             userRepository = null;
             emailService = null;
             reservationEmailNotifier = null;
+            reservationService = null;
             currentFirebaseUser = null;
         }
     }
@@ -107,6 +120,7 @@ public class ReservationActivityTest {
         TestReservationActivity.userRepository = mock(UserRepository.class);
         TestReservationActivity.emailService = mock(EmailService.class);
         TestReservationActivity.reservationEmailNotifier = mock(ReservationEmailNotifier.class);
+        TestReservationActivity.reservationService = mock(ReservationService.class);
     }
 
     @After
@@ -142,8 +156,10 @@ public class ReservationActivityTest {
         TextView total = activity.findViewById(R.id.tvTotalPrice);
 
         quantity.setText("3");
-
         assertEquals("Total: $150.00", total.getText().toString());
+
+        quantity.setText("");
+        assertEquals("Total: $0.00", total.getText().toString());
     }
 
     @Test
@@ -183,22 +199,15 @@ public class ReservationActivityTest {
     }
 
     @Test
-    public void confirmWithValidQuantity_createsReservationAndSendsEmail() {
-        ReservationRepository reservationRepository = mock(ReservationRepository.class);
-        UserRepository userRepository = mock(UserRepository.class);
-        EmailService emailService = mock(EmailService.class);
-        ReservationEmailNotifier notifier = mock(ReservationEmailNotifier.class);
+    public void confirmWithValidQuantity_createsReservation() {
+        ReservationService reservationService = mock(ReservationService.class);
         FirebaseUser firebaseUser = mock(FirebaseUser.class);
 
-        when(userRepository.getCurrentUserId()).thenReturn("user-1");
         when(firebaseUser.getUid()).thenReturn("user-1");
         when(firebaseUser.getEmail()).thenReturn("user@example.com");
-        when(reservationRepository.createReservation(any(), eq(2))).thenReturn(Tasks.forResult(null));
+        when(reservationService.processReservation(any(), eq(2), any())).thenReturn(Tasks.forResult(null));
 
-        TestReservationActivity.reservationRepository = reservationRepository;
-        TestReservationActivity.userRepository = userRepository;
-        TestReservationActivity.emailService = emailService;
-        TestReservationActivity.reservationEmailNotifier = notifier;
+        TestReservationActivity.reservationService = reservationService;
         TestReservationActivity.currentFirebaseUser = firebaseUser;
 
         TestReservationActivity activity = buildActivity();
@@ -210,33 +219,36 @@ public class ReservationActivityTest {
         Shadows.shadowOf(Looper.getMainLooper()).idle();
 
         assertEquals("Reservation confirmed!", ShadowToast.getTextOfLatestToast());
-        verify(reservationRepository).createReservation(any(), eq(2));
-        verify(notifier).sendConfirmationEmail(
-                eq(emailService),
-                any(Event.class),
-                eq("user@example.com"),
-                eq(2),
-                any()
-        );
+        verify(reservationService).processReservation(any(Reservation.class), eq(2), any());
         assertNotNull(Shadows.shadowOf(activity).getNextStartedActivity());
     }
 
     @Test
-    public void confirmWithRepositoryFailure_showsFailureToast() {
-        ReservationRepository reservationRepository = mock(ReservationRepository.class);
-        UserRepository userRepository = mock(UserRepository.class);
+    public void confirmWithNullUser_doesNothing() {
+        ReservationService reservationService = mock(ReservationService.class);
+        TestReservationActivity.reservationService = reservationService;
+        TestReservationActivity.currentFirebaseUser = null;
+
+        TestReservationActivity activity = buildActivity();
+        EditText quantity = activity.findViewById(R.id.etQuantity);
+        Button confirm = activity.findViewById(R.id.btnConfirm);
+
+        quantity.setText("2");
+        confirm.performClick();
+
+        verify(reservationService, org.mockito.Mockito.never()).processReservation(any(), anyInt(), any());
+    }
+
+    @Test
+    public void confirmWithServiceFailure_showsFailureToast() {
+        ReservationService reservationService = mock(ReservationService.class);
         FirebaseUser firebaseUser = mock(FirebaseUser.class);
 
-        when(userRepository.getCurrentUserId()).thenReturn("user-1");
         when(firebaseUser.getUid()).thenReturn("user-1");
-        when(firebaseUser.getEmail()).thenReturn("user@example.com");
-        when(reservationRepository.createReservation(any(), eq(2)))
+        when(reservationService.processReservation(any(), eq(2), any()))
                 .thenReturn(Tasks.forException(new RuntimeException("boom")));
 
-        TestReservationActivity.reservationRepository = reservationRepository;
-        TestReservationActivity.userRepository = userRepository;
-        TestReservationActivity.emailService = mock(EmailService.class);
-        TestReservationActivity.reservationEmailNotifier = mock(ReservationEmailNotifier.class);
+        TestReservationActivity.reservationService = reservationService;
         TestReservationActivity.currentFirebaseUser = firebaseUser;
 
         TestReservationActivity activity = buildActivity();
