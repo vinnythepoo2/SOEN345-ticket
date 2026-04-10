@@ -13,7 +13,12 @@ val localProperties = Properties().apply {
     }
 }
 
-fun localProperty(key: String): String = localProperties.getProperty(key, "")
+fun localProperty(key: String): String {
+    val prop = localProperties.getProperty(key, "")
+    if (prop.isNotEmpty()) return prop
+    // Fallback to environment variables for CI (GitHub Secrets)
+    return System.getenv(key) ?: ""
+}
 
 android {
     namespace = "com.example.soen345_ticket"
@@ -81,7 +86,6 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.json)
     testImplementation(libs.robolectric)
-    testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.core)
 
     androidTestImplementation(libs.ext.junit)
