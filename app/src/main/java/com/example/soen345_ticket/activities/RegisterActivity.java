@@ -20,8 +20,8 @@ public class RegisterActivity extends AppCompatActivity {
         binding = ActivityRegisterBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        userRepository = new UserRepository();
-        auth = FirebaseAuth.getInstance();
+        userRepository = createUserRepository();
+        auth = getFirebaseAuth();
 
         binding.btnRegister.setOnClickListener(v -> {
             String fullName = binding.etFullName.getText().toString().trim();
@@ -31,12 +31,12 @@ public class RegisterActivity extends AppCompatActivity {
             String role = "customer"; // Default role is customer
 
             if (fullName.isEmpty() || email.isEmpty() || phone.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+                showToast("Please fill in all fields");
                 return;
             }
 
             if (password.length() < 6) {
-                Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
+                showToast("Password must be at least 6 characters");
                 return;
             }
 
@@ -46,15 +46,14 @@ public class RegisterActivity extends AppCompatActivity {
                     User user = new User(userId, fullName, email, phone, role);
                     userRepository.saveUser(user).addOnCompleteListener(saveTask -> {
                         if (saveTask.isSuccessful()) {
-                            Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(this, MainActivity.class));
-                            finish();
+                            showToast("Registration successful");
+                            navigateToMain();
                         } else {
-                            Toast.makeText(this, "Failed to save user info: " + saveTask.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                            showToast("Failed to save user info: " + (saveTask.getException() != null ? saveTask.getException().getMessage() : "Unknown error"));
                         }
                     });
                 } else {
-                    Toast.makeText(this, "Registration failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                    showToast("Registration failed: " + (task.getException() != null ? task.getException().getMessage() : "Unknown error"));
                 }
             });
         });
@@ -62,5 +61,22 @@ public class RegisterActivity extends AppCompatActivity {
         binding.tvLogin.setOnClickListener(v -> {
             finish();
         });
+    }
+
+    protected UserRepository createUserRepository() {
+        return new UserRepository();
+    }
+
+    protected FirebaseAuth getFirebaseAuth() {
+        return FirebaseAuth.getInstance();
+    }
+
+    protected void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    protected void navigateToMain() {
+        startActivity(new Intent(this, MainActivity.class));
+        finish();
     }
 }
