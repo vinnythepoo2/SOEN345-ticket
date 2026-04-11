@@ -1,0 +1,6 @@
+# Copy this file to 'local.properties' and fill in your actual keys
+# The sdk.dir is usually handled by Android Studio automatically
+
+EMAILJS_SERVICE_ID=your_service_id_here
+EMAILJS_TEMPLATE_ID=your_template_id_here
+EMAILJS_PUBLIC_KEY=your_public_key_here

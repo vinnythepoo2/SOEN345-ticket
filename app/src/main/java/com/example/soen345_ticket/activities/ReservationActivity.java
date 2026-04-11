@@ -9,10 +9,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.soen345_ticket.databinding.ActivityReservationBinding;
 import com.example.soen345_ticket.models.Event;
 import com.example.soen345_ticket.models.Reservation;
+import com.example.soen345_ticket.models.User;
 import com.example.soen345_ticket.repositories.ReservationRepository;
 import com.example.soen345_ticket.repositories.UserRepository;
+import com.example.soen345_ticket.services.EmailNotificationService;
 import com.example.soen345_ticket.services.EmailService;
+import com.example.soen345_ticket.services.NetworkChecker;
+import com.example.soen345_ticket.services.NotificationService;
 import com.example.soen345_ticket.services.ReservationEmailNotifier;
+import com.example.soen345_ticket.services.ReservationService;
+import com.example.soen345_ticket.utils.NetworkUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import java.text.SimpleDateFormat;
@@ -24,8 +30,7 @@ public class ReservationActivity extends AppCompatActivity {
     private Event event;
     private ReservationRepository reservationRepository;
     private UserRepository userRepository;
-    private EmailService emailService;
-    private ReservationEmailNotifier reservationEmailNotifier;
+    private ReservationService reservationService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +38,6 @@ public class ReservationActivity extends AppCompatActivity {
         binding = ActivityReservationBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Set the toolbar but disable the back arrow (Home button)
         setSupportActionBar(binding.toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -43,8 +47,7 @@ public class ReservationActivity extends AppCompatActivity {
         event = (Event) getIntent().getSerializableExtra("event");
         reservationRepository = createReservationRepository();
         userRepository = createUserRepository();
-        emailService = createEmailService();
-        reservationEmailNotifier = createReservationEmailNotifier();
+        reservationService = createReservationService();
 
         if (event != null) {
             binding.tvEventTitle.setText(event.getTitle());
@@ -81,24 +84,8 @@ public class ReservationActivity extends AppCompatActivity {
                 confirmBooking(quantity);
             });
             
-            // Explicit Back button listener
-            binding.btnBack.setOnClickListener(v -> {
-                onBackPressed();
-            });
+            binding.btnBack.setOnClickListener(v -> onBackPressed());
         }
-    }
-
-    private void sendConfirmationEmail(int quantity, String bookingDate) {
-        FirebaseUser currentUser = getCurrentFirebaseUser();
-        if (currentUser == null || currentUser.getEmail() == null) return;
-
-        reservationEmailNotifier.sendConfirmationEmail(
-                emailService,
-                event,
-                currentUser.getEmail(),
-                quantity,
-                bookingDate
-        );
     }
 
     private void updateTotal() {
@@ -113,12 +100,17 @@ public class ReservationActivity extends AppCompatActivity {
     }
 
     private void confirmBooking(int quantity) {
-        String userId = userRepository.getCurrentUserId();
-        String date = getCurrentTimestamp();
+        FirebaseUser fbUser = getCurrentFirebaseUser();
+        if (fbUser == null) return;
 
+        User user = new User();
+        user.setUserId(fbUser.getUid());
+        user.setEmail(fbUser.getEmail());
+
+        String date = getCurrentTimestamp();
         Reservation reservation = new Reservation(
                 null,
-                userId,
+                user.getUserId(),
                 event.getEventId(),
                 event.getTitle(),
                 date,
@@ -126,10 +118,9 @@ public class ReservationActivity extends AppCompatActivity {
                 "active"
         );
 
-        reservationRepository.createReservation(reservation, quantity).addOnCompleteListener(task -> {
+        reservationService.processReservation(reservation, quantity, user).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 showToast("Reservation confirmed!", Toast.LENGTH_LONG);
-                sendConfirmationEmail(quantity, date);
                 navigateToMain();
             } else {
                 showToast(
@@ -154,6 +145,12 @@ public class ReservationActivity extends AppCompatActivity {
 
     protected ReservationEmailNotifier createReservationEmailNotifier() {
         return new ReservationEmailNotifier();
+    }
+
+    protected ReservationService createReservationService() {
+        NotificationService notificationService = new EmailNotificationService(createEmailService(), createReservationEmailNotifier());
+        NetworkChecker networkChecker = () -> NetworkUtils.isNetworkAvailable(this);
+        return new ReservationService(createReservationRepository(), notificationService, networkChecker);
     }
 
     protected FirebaseUser getCurrentFirebaseUser() {

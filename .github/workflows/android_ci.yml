@@ -30,6 +30,11 @@ jobs:
       run: chmod +x gradlew
 
     - name: Build and Run Tests
+      env:
+        # Inject secrets as environment variables for use in app/build.gradle.kts
+        EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
+        EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
+        EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
       run: ./gradlew assembleDebug testDebugUnitTest jacocoTestReport
 
     - name: Check Coverage Report Existence

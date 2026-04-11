@@ -30,7 +30,7 @@ public class AddEditEventActivity extends AppCompatActivity {
             getSupportActionBar().setTitle("Add/Edit Event");
         }
 
-        eventRepository = new EventRepository();
+        eventRepository = createEventRepository();
 
         event = (Event) getIntent().getSerializableExtra("event");
         if (event != null) {
@@ -43,6 +43,10 @@ public class AddEditEventActivity extends AppCompatActivity {
         
         // Manual back button listener - explicitly goes to AdminDashboard
         binding.btnBack.setOnClickListener(v -> goToDashboard());
+    }
+
+    protected EventRepository createEventRepository() {
+        return new EventRepository();
     }
 
     private void goToDashboard() {
@@ -81,12 +85,29 @@ public class AddEditEventActivity extends AppCompatActivity {
         String priceStr = binding.etPrice.getText().toString().trim();
 
         if (title.isEmpty() || seatsStr.isEmpty() || priceStr.isEmpty()) {
-            Toast.makeText(this, "Please fill in all required fields", Toast.LENGTH_SHORT).show();
+            showToast("Please fill in all required fields");
             return;
         }
 
-        int totalSeats = Integer.parseInt(seatsStr);
-        double price = Double.parseDouble(priceStr);
+        int totalSeats;
+        double price;
+        try {
+            totalSeats = Integer.parseInt(seatsStr);
+            price = Double.parseDouble(priceStr);
+        } catch (NumberFormatException e) {
+            showToast("Invalid number format for seats or price");
+            return;
+        }
+
+        if (totalSeats < 0) {
+            showToast("Seats cannot be negative");
+            return;
+        }
+
+        if (price < 0) {
+            showToast("Price cannot be negative");
+            return;
+        }
 
         if (isEditMode) {
             event.setTitle(title);
@@ -102,10 +123,10 @@ public class AddEditEventActivity extends AppCompatActivity {
 
             eventRepository.updateEvent(event).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
-                    Toast.makeText(this, "Event updated", Toast.LENGTH_SHORT).show();
+                    showToast("Event updated");
                     goToDashboard();
                 } else {
-                    Toast.makeText(this, "Failed to update event", Toast.LENGTH_SHORT).show();
+                    showToast("Failed to update event");
                 }
             });
         } else {
@@ -115,10 +136,10 @@ public class AddEditEventActivity extends AppCompatActivity {
             );
             eventRepository.addEvent(newEvent).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
-                    Toast.makeText(this, "Event added", Toast.LENGTH_SHORT).show();
+                    showToast("Event added");
                     goToDashboard();
                 } else {
-                    Toast.makeText(this, "Failed to add event", Toast.LENGTH_SHORT).show();
+                    showToast("Failed to add event");
                 }
             });
         }
@@ -128,12 +149,16 @@ public class AddEditEventActivity extends AppCompatActivity {
         if (event != null) {
             eventRepository.deleteEvent(event.getEventId()).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
-                    Toast.makeText(this, "Event deleted", Toast.LENGTH_SHORT).show();
+                    showToast("Event deleted");
                     goToDashboard();
                 } else {
-                    Toast.makeText(this, "Failed to delete event", Toast.LENGTH_SHORT).show();
+                    showToast("Failed to delete event");
                 }
             });
         }
+    }
+
+    protected void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 }

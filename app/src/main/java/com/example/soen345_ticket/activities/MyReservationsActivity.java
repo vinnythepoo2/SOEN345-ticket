@@ -37,8 +37,8 @@ public class MyReservationsActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         }
 
-        reservationRepository = new ReservationRepository();
-        userRepository = new UserRepository();
+        reservationRepository = createReservationRepository();
+        userRepository = createUserRepository();
 
         setupRecyclerView();
         
@@ -46,6 +46,14 @@ public class MyReservationsActivity extends AppCompatActivity {
         binding.btnBack.setOnClickListener(v -> {
             onBackPressed();
         });
+    }
+
+    protected ReservationRepository createReservationRepository() {
+        return new ReservationRepository();
+    }
+
+    protected UserRepository createUserRepository() {
+        return new UserRepository();
     }
 
     private void setupRecyclerView() {
@@ -67,9 +75,9 @@ public class MyReservationsActivity extends AppCompatActivity {
                     holder.btnCancel.setOnClickListener(v -> {
                         reservationRepository.cancelReservation(model).addOnCompleteListener(task -> {
                             if (task.isSuccessful()) {
-                                Toast.makeText(MyReservationsActivity.this, "Reservation cancelled", Toast.LENGTH_SHORT).show();
+                                showToast("Reservation cancelled");
                             } else {
-                                Toast.makeText(MyReservationsActivity.this, "Failed to cancel: " + (task.getException() != null ? task.getException().getMessage() : "Unknown error"), Toast.LENGTH_SHORT).show();
+                                showToast("Failed to cancel: " + (task.getException() != null ? task.getException().getMessage() : "Unknown error"));
                             }
                         });
                     });
@@ -88,6 +96,10 @@ public class MyReservationsActivity extends AppCompatActivity {
 
         binding.rvReservations.setLayoutManager(new LinearLayoutManager(this));
         binding.rvReservations.setAdapter(adapter);
+    }
+
+    protected void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
