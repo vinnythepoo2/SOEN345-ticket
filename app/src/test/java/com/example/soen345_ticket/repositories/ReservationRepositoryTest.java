@@ -1,6 +1,8 @@
 package com.example.soen345_ticket.repositories;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -11,6 +13,7 @@ import com.example.soen345_ticket.models.Reservation;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.Transaction;
 
 import org.junit.After;
 import org.junit.Before;
@@ -27,6 +30,12 @@ public class ReservationRepositoryTest {
     private DatabaseReference mockRootRef;
     @Mock
     private DatabaseReference mockReservationsRef;
+    @Mock
+    private DatabaseReference mockEventsRef;
+    @Mock
+    private DatabaseReference mockSingleEventRef;
+    @Mock
+    private DatabaseReference mockPushRef;
 
     private MockedStatic<FirebaseDatabase> mockedDbStatic;
     private ReservationRepository reservationRepository;
@@ -60,8 +69,50 @@ public class ReservationRepositoryTest {
         verify(mockQuery).equalTo("user123");
         assertEquals(mockQuery, result);
     }
-    
-    // Note: createReservation and cancelReservation involve complex Firebase Transactions 
-    // which are typically tested via Integration Tests or complex ArgumentCaptors.
-    // Basic logic for database pathing is verified here.
+
+    @Test
+    public void testCreateReservation_Pathing() {
+        // Setup paths
+        when(mockRootRef.child("events")).thenReturn(mockEventsRef);
+        when(mockEventsRef.child("evt-1")).thenReturn(mockSingleEventRef);
+        when(mockRootRef.child("reservations")).thenReturn(mockReservationsRef);
+        when(mockReservationsRef.push()).thenReturn(mockPushRef);
+        when(mockPushRef.getKey()).thenReturn("res-new");
+
+        Reservation res = new Reservation();
+        res.setEventId("evt-1");
+
+        // Act
+        reservationRepository.createReservation(res, 2);
+
+        // Verify that it reached the correct database nodes
+        verify(mockRootRef).child("events");
+        verify(mockEventsRef).child("evt-1");
+        verify(mockRootRef).child("reservations");
+        verify(mockReservationsRef).push();
+        verify(mockSingleEventRef).runTransaction(any(Transaction.Handler.class));
+    }
+
+    @Test
+    public void testCancelReservation_Pathing() {
+        // Setup paths
+        when(mockRootRef.child("events")).thenReturn(mockEventsRef);
+        when(mockEventsRef.child("evt-1")).thenReturn(mockSingleEventRef);
+        when(mockRootRef.child("reservations")).thenReturn(mockReservationsRef);
+        when(mockReservationsRef.child("res-1")).thenReturn(mockPushRef);
+
+        Reservation res = new Reservation();
+        res.setEventId("evt-1");
+        res.setReservationId("res-1");
+
+        // Act
+        reservationRepository.cancelReservation(res);
+
+        // Verify that it reached the correct database nodes
+        verify(mockRootRef).child("events");
+        verify(mockEventsRef).child("evt-1");
+        verify(mockRootRef).child("reservations");
+        verify(mockReservationsRef).child("res-1");
+        verify(mockSingleEventRef).runTransaction(any(Transaction.Handler.class));
+    }
 }

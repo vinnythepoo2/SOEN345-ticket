@@ -20,15 +20,15 @@ public class LoginActivity extends AppCompatActivity {
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        userRepository = new UserRepository();
-        auth = FirebaseAuth.getInstance();
+        userRepository = createUserRepository();
+        auth = getFirebaseAuth();
 
         binding.btnLogin.setOnClickListener(v -> {
             String email = binding.etEmail.getText().toString().trim();
             String password = binding.etPassword.getText().toString().trim();
 
             if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+                showToast("Please fill in all fields");
                 return;
             }
 
@@ -38,23 +38,47 @@ public class LoginActivity extends AppCompatActivity {
                         if (dataSnapshot.exists()) {
                             String role = dataSnapshot.child("role").getValue(String.class);
                             if ("admin".equals(role)) {
-                                startActivity(new Intent(this, AdminDashboardActivity.class));
+                                navigateToAdminDashboard();
                             } else {
-                                startActivity(new Intent(this, MainActivity.class));
+                                navigateToMain();
                             }
                             finish();
                         }
                     }).addOnFailureListener(e -> {
-                        Toast.makeText(this, "Error getting user info", Toast.LENGTH_SHORT).show();
+                        showToast("Error getting user info");
                     });
                 } else {
-                    Toast.makeText(this, "Authentication failed", Toast.LENGTH_SHORT).show();
+                    showToast("Authentication failed");
                 }
             });
         });
 
         binding.tvRegister.setOnClickListener(v -> {
-            startActivity(new Intent(this, RegisterActivity.class));
+            navigateToRegister();
         });
+    }
+
+    protected UserRepository createUserRepository() {
+        return new UserRepository();
+    }
+
+    protected FirebaseAuth getFirebaseAuth() {
+        return FirebaseAuth.getInstance();
+    }
+
+    protected void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    protected void navigateToAdminDashboard() {
+        startActivity(new Intent(this, AdminDashboardActivity.class));
+    }
+
+    protected void navigateToMain() {
+        startActivity(new Intent(this, MainActivity.class));
+    }
+
+    protected void navigateToRegister() {
+        startActivity(new Intent(this, RegisterActivity.class));
     }
 }
