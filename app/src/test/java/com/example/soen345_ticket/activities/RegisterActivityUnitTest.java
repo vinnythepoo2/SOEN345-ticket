@@ -181,4 +181,13 @@ public class RegisterActivityUnitTest {
             assertTrue(activity.navigatedToMain);
         }
     }
+
+    @Test
+    public void tvLogin_finishesActivity() {
+        try (ActivityController<TestRegisterActivity> controller = Robolectric.buildActivity(TestRegisterActivity.class)) {
+            TestRegisterActivity activity = controller.setup().get();
+            activity.findViewById(com.example.soen345_ticket.R.id.tvLogin).performClick();
+            assertTrue(activity.isFinishing());
+        }
+    }
 }

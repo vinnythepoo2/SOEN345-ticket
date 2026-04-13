@@ -9,6 +9,8 @@ import static org.mockito.Mockito.when;
 import android.os.Bundle;
 import android.os.Looper;
 import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 import com.example.soen345_ticket.R;
 import com.example.soen345_ticket.models.Reservation;
 import com.example.soen345_ticket.repositories.ReservationRepository;
@@ -129,5 +131,18 @@ public class MyReservationsActivityUnitTest {
 
             assertEquals("Failed to cancel: Fail", ShadowToast.getTextOfLatestToast());
         }
+    }
+
+    @Test
+    public void onSupportNavigateUp_callsOnBackPressed() {
+        try (ActivityController<TestMyReservationsActivity> controller = Robolectric.buildActivity(TestMyReservationsActivity.class)) {
+            TestMyReservationsActivity activity = controller.setup().get();
+            boolean result = activity.onSupportNavigateUp();
+            assertTrue(result);
+        }
+    }
+    
+    private void assertTrue(boolean condition) {
+        if (!condition) throw new AssertionError();
     }
 }

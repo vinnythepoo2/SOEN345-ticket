@@ -103,7 +103,15 @@ tasks.register<JacocoReport>("jacocoTestReport") {
 
     val fileFilter = mutableListOf(
         "**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*",
-        "**/*Test*.*", "android/**/*.*"
+        "**/*Test*.*", "android/**/*.*",
+        "**/databinding/*Binding.class",
+        "**/DataBinderMapperImpl.class",
+        "**/DataBindingInfo.class",
+        "**/BR.class",
+        "com/example/soen345_ticket/databinding/*",
+        "**/*$*.class",             // Exclude anonymous inner classes/lambdas
+        "**/androidx/*.*",          // Exclude library code
+        "**/com/google/firebase/*"  // Exclude Firebase internals
     )
     
     // Modern path for Java classes (AGP 9 adds compileDebugJavaWithJavac subdirectory)

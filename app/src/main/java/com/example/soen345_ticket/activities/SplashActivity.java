@@ -18,10 +18,10 @@ public class SplashActivity extends AppCompatActivity {
         ActivitySplashBinding binding = ActivitySplashBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        userRepository = new UserRepository();
+        userRepository = createUserRepository();
 
         new Handler().postDelayed(() -> {
-            if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            if (getFirebaseAuth().getCurrentUser() != null) {
                 userRepository.getCurrentUser().addOnSuccessListener(dataSnapshot -> {
                     if (dataSnapshot.exists()) {
                         String role = dataSnapshot.child("role").getValue(String.class);
@@ -32,12 +32,12 @@ public class SplashActivity extends AppCompatActivity {
                         }
                     } else {
                         // User exists in Auth but not in Database, sign out
-                        FirebaseAuth.getInstance().signOut();
+                        getFirebaseAuth().signOut();
                         startActivity(new Intent(SplashActivity.this, LoginActivity.class));
                     }
                     finish();
                 }).addOnFailureListener(e -> {
-                    FirebaseAuth.getInstance().signOut();
+                    getFirebaseAuth().signOut();
                     startActivity(new Intent(SplashActivity.this, LoginActivity.class));
                     finish();
                 });
@@ -45,6 +45,18 @@ public class SplashActivity extends AppCompatActivity {
                 startActivity(new Intent(SplashActivity.this, LoginActivity.class));
                 finish();
             }
-        }, 2000);
+        }, getDelayMillis());
+    }
+
+    protected UserRepository createUserRepository() {
+        return new UserRepository();
+    }
+
+    protected FirebaseAuth getFirebaseAuth() {
+        return FirebaseAuth.getInstance();
+    }
+
+    protected long getDelayMillis() {
+        return 2000;
     }
 }

@@ -35,14 +35,13 @@ public class AdminDashboardActivity extends AppCompatActivity {
         binding = ActivityAdminDashboardBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // We set the toolbar but won't use the overflow menu (triple dots) anymore
         setSupportActionBar(binding.toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Admin Dashboard");
         }
 
-        eventRepository = new EventRepository();
-        userRepository = new UserRepository();
+        eventRepository = createEventRepository();
+        userRepository = createUserRepository();
 
         setupRecyclerView();
 
@@ -50,12 +49,23 @@ public class AdminDashboardActivity extends AppCompatActivity {
             startActivity(new Intent(this, AddEditEventActivity.class));
         });
 
-        // Manual Logout button on screen
         binding.btnLogout.setOnClickListener(v -> {
             userRepository.logout();
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
+            navigateToLogin();
         });
+    }
+
+    protected EventRepository createEventRepository() {
+        return new EventRepository();
+    }
+
+    protected UserRepository createUserRepository() {
+        return new UserRepository();
+    }
+
+    protected void navigateToLogin() {
+        startActivity(new Intent(this, LoginActivity.class));
+        finish();
     }
 
     private void setupRecyclerView() {
@@ -88,13 +98,16 @@ public class AdminDashboardActivity extends AppCompatActivity {
             @Override
             public void onError(@NonNull DatabaseError error) {
                 super.onError(error);
-                Toast.makeText(AdminDashboardActivity.this, "Database Error: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                showToast("Database Error: " + error.getMessage());
             }
         };
 
-        // Use safe LayoutManager to prevent IndexOutOfBoundsException
         binding.rvEvents.setLayoutManager(new WrappedLinearLayoutManager(this));
         binding.rvEvents.setAdapter(adapter);
+    }
+
+    protected void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -108,8 +121,6 @@ public class AdminDashboardActivity extends AppCompatActivity {
         super.onStop();
         if (adapter != null) adapter.stopListening();
     }
-
-    // Removed onCreateOptionsMenu and onOptionsItemSelected to get rid of the triple dots (overflow menu)
 
     public static class AdminEventViewHolder extends RecyclerView.ViewHolder {
         TextView tvTitle, tvDate, tvStatus, tvSeats;
