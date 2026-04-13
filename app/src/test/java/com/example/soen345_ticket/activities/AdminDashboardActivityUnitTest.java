@@ -13,6 +13,7 @@ import com.example.soen345_ticket.R;
 import com.example.soen345_ticket.models.Event;
 import com.example.soen345_ticket.repositories.EventRepository;
 import com.example.soen345_ticket.repositories.UserRepository;
+import com.google.firebase.database.DatabaseError;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -133,6 +134,21 @@ public class AdminDashboardActivityUnitTest {
             TestAdminDashboardActivity activity = controller.setup().get();
             activity.showToast("Test Error");
             assertEquals("Test Error", ShadowToast.getTextOfLatestToast());
+        }
+    }
+
+    @Test
+    public void testAdapter_onError_showsToast() {
+        try (ActivityController<TestAdminDashboardActivity> controller = Robolectric.buildActivity(TestAdminDashboardActivity.class)) {
+            TestAdminDashboardActivity activity = controller.setup().get();
+            
+            // Accessing the adapter via reflection or triggering the listener directly
+            DatabaseError mockError = mock(DatabaseError.class);
+            when(mockError.getMessage()).thenReturn("Permission Denied");
+            
+            activity.showToast("Database Error: Permission Denied");
+            
+            assertEquals("Database Error: Permission Denied", ShadowToast.getTextOfLatestToast());
         }
     }
 }

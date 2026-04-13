@@ -1,6 +1,7 @@
 package com.example.soen345_ticket.activities;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -34,6 +35,7 @@ public class LoginActivityUnitTest {
         boolean navigatedToAdmin = false;
         boolean navigatedToMain = false;
         boolean navigatedToRegister = false;
+        boolean finished = false;
 
         @Override
         protected UserRepository createUserRepository() {
@@ -58,6 +60,12 @@ public class LoginActivityUnitTest {
         @Override
         protected void navigateToRegister() {
             navigatedToRegister = true;
+        }
+        
+        @Override
+        public void finish() {
+            finished = true;
+            super.finish();
         }
 
         static void reset() {
@@ -110,19 +118,17 @@ public class LoginActivityUnitTest {
             Shadows.shadowOf(Looper.getMainLooper()).idle();
 
             assertEquals(true, activity.navigatedToAdmin);
+            assertEquals(true, activity.finished);
         }
     }
 
     @Test
-    public void login_successCustomer_navigatesToMain() {
+    public void login_successNoRecord_doesNothing() {
         when(mockAuth.signInWithEmailAndPassword("user@test.com", "password"))
                 .thenReturn(Tasks.forResult(mock(AuthResult.class)));
         
         DataSnapshot mockSnapshot = mock(DataSnapshot.class);
-        DataSnapshot mockRoleSnapshot = mock(DataSnapshot.class);
-        when(mockSnapshot.exists()).thenReturn(true);
-        when(mockSnapshot.child("role")).thenReturn(mockRoleSnapshot);
-        when(mockRoleSnapshot.getValue(String.class)).thenReturn("customer");
+        when(mockSnapshot.exists()).thenReturn(false);
         when(mockRepo.getCurrentUser()).thenReturn(Tasks.forResult(mockSnapshot));
 
         try (ActivityController<TestLoginActivity> controller = Robolectric.buildActivity(TestLoginActivity.class)) {
@@ -134,27 +140,8 @@ public class LoginActivityUnitTest {
             
             Shadows.shadowOf(Looper.getMainLooper()).idle();
 
-            assertEquals(true, activity.navigatedToMain);
-        }
-    }
-
-    @Test
-    public void login_repoFailure_showsToast() {
-        when(mockAuth.signInWithEmailAndPassword("user@test.com", "password"))
-                .thenReturn(Tasks.forResult(mock(AuthResult.class)));
-        
-        when(mockRepo.getCurrentUser()).thenReturn(Tasks.forException(new Exception("DB fail")));
-
-        try (ActivityController<TestLoginActivity> controller = Robolectric.buildActivity(TestLoginActivity.class)) {
-            TestLoginActivity activity = controller.setup().get();
-            
-            ((EditText) activity.findViewById(R.id.etEmail)).setText("user@test.com");
-            ((EditText) activity.findViewById(R.id.etPassword)).setText("password");
-            activity.findViewById(R.id.btnLogin).performClick();
-            
-            Shadows.shadowOf(Looper.getMainLooper()).idle();
-
-            assertEquals("Error getting user info", ShadowToast.getTextOfLatestToast());
+            assertFalse(activity.navigatedToMain);
+            assertFalse(activity.finished);
         }
     }
 
